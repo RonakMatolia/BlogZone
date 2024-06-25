@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id  Int    @id @default(autoincrement())
+  id  String    @id @default(cuid())
   name    String?
   username String @unique
   password String
@@ -17,8 +17,8 @@ model User {
 }
 
 model Blog {
-  id  Int    @id @default(autoincrement())
-  authorId   Int
+  id  String    @id @default(cuid())
+  authorId   String
   content    String
   title       String
   published Boolean  @default(false)

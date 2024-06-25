@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { sign } from 'hono/jwt'
 import { signupInput, signinInput } from "@ronak09/medium-common";
-
+import z from "zod"
 export const userRouter = new Hono<{
     Bindings: {
         DATABASE_URL: string;
@@ -11,10 +11,16 @@ export const userRouter = new Hono<{
     }
 }>();
 
+
+const signupInputSchema  =  z.object({
+  username: z.string().email(),
+  name: z.string(),
+  password: z.string().min(6)
+})
 userRouter.post('/signup', async (c) => {
     const body = await c.req.json();
     console.log(body)
-    const { success } = signupInput.safeParse(body);
+    const { success } = signupInputSchema.safeParse(body);
     if (!success) {
         c.status(411);
         return c.json({
@@ -28,7 +34,7 @@ userRouter.post('/signup', async (c) => {
     try {
       const user = await prisma.user.create({
         data: {
-          email: body.username,
+          username: body.username,
           password: body.password,
           name: body.name
         }
@@ -63,7 +69,7 @@ userRouter.post('/signup', async (c) => {
     try {
       const user = await prisma.user.findFirst({
         where: {
-          email: body.username,
+          username: body.username,
           password: body.password,
         }
       })

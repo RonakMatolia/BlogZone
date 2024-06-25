@@ -19,24 +19,25 @@ bookRouter.use(async (c, next) => {
 		c.status(401);
 		return c.json({ error: "unauthorized" });
 	}
-	const token = jwt.split(' ')[1];
+	const token = jwt.split('Bearer ')[1];
 	const payload = await verify(token, c.env.JWT_SECRET);
 	if (!payload) {
 		c.status(401);
 		return c.json({ error: "unauthorized" });
 	}
+	// @ts-ignore
 	c.set('userId', payload.id);
 	await next()
 });
 
-bookRouter.post('/', async (c) => {
+bookRouter.post('/publish', async (c) => {
 	const userId = c.get('userId');
 	const prisma = new PrismaClient({
 		datasourceUrl: c.env?.DATABASE_URL	,
 	}).$extends(withAccelerate());
 
 	const body = await c.req.json();
-	const post = await prisma.post.create({
+	const post = await prisma.blog.create({
 		data: {
 			title: body.title,
 			content: body.content,
@@ -48,7 +49,7 @@ bookRouter.post('/', async (c) => {
 	});
 })
 
-bookRouter.put('/', async (c) => {
+bookRouter.put('/edit', async (c) => {
 	const userId = c.get('userId');
 	const prisma = new PrismaClient({
 		datasourceUrl: c.env?.DATABASE_URL	,
@@ -56,7 +57,7 @@ bookRouter.put('/', async (c) => {
 
 	const body = await c.req.json();
     console.log(body);
-	await prisma.post.update({
+	await prisma.blog.update({
 		where: {
 			id: body.id,
 			authorId: userId
@@ -74,7 +75,7 @@ bookRouter.get('/bulk', async (c) => {
         datasourceUrl: c.env?.DATABASE_URL,
     }).$extends(withAccelerate());
 
-    const blogs = await prisma.post.findMany();
+    const blogs = await prisma.blog.findMany();
 
     return c.json({
         blogs
@@ -88,7 +89,7 @@ bookRouter.get('/:id', async (c) => {
 		datasourceUrl: c.env?.DATABASE_URL	,
 	}).$extends(withAccelerate());
 	
-	const post = await prisma.post.findUnique({
+	const post = await prisma.blog.findUnique({
 		where: {
 			id
 		}
